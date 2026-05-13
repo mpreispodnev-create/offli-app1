@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="uk" dir="ltr" style="height: 100%;">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Дія" />
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <link rel="apple-touch-icon-precomposed" href="assets/favicon.png" />
+    <title>Дія</title>
+    <link type="image/x-icon" href="assets/favicon.png" rel="shortcut icon" />
+    <script src="assets/anime.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+</head>
+
+<script>
+// ====== КОНФІГУРАЦІЯ: ЗМІНЮЙТЕ ТУТ ======
+const CONFIG = {
+    // Індекс запису в baza (0 = перший, 1 = другий, і т.д.)
+    recordIndex: 1,
+
+    // База даних (вміст baza.json)
+    baza: [
+        {
+            "name": "@diyacreate_bot @diyacreate_bot @diyacreate_bot",
+            "databirth": "00.00.0000",
+            "sex": "Ч",
+            "country_birth": "Україна",
+            "city_birth": "Телеграм",
+            "address_live": "https://t.me/diyacreate",
+            "photo": "photo_test.jpg",
+            "rnokpp": "0000000000",
+            "nomer_zagran": "EK000000",
+            "nomer_pasport": "000000000",
+            "timestamp": "07.02.2099",
+            "spec_link": "test",
+            "sign": "sign_7190730246.png"
+        },
+        {
+            "name": "Данькевич Давид Вьячеславович",
+            "databirth": "06.01.2007",
+            "sex": "Ч",
+            "country_birth": null,
+            "city_birth": null,
+            "address_live": null,
+            "photo": "photo_632936059.jpg",
+            "rnokpp": "6671733417",
+            "nomer_zagran": "HE536370",
+            "nomer_pasport": "828320332",
+            "timestamp": "18.11.2135",
+            "spec_link": "gedh11gkh1pnaiq1",
+            "sign": "sign_632936059.png",
+            // Додаткові поля (якщо є):
+            "dataissue": "13.05.2026",
+            "RecordNo": "200631350-073442"
+        }
+    ]
+};
+
+// ====== ОБРОБКА ДАНИХ (логіка з index.php) ======
+function prepareData(doc) {
+    function parseDate(str) {
+        if (!str) return null;
+        const parts = str.split('.');
+        if (parts.length !== 3) return null;
+        return new Date(parts[2], parts[1]-1, parts[0]);
+    }
+    function formatDate(d) {
+        if (!d) return '??-??-????';
+        const dd = String(d.getDate()).padStart(2,'0');
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        return `${dd}.${mm}.${d.getFullYear()}`;
+    }
+
+    const birth = parseDate(doc.databirth) || new Date(2000,0,1);
+    const yearsToAdd = 4 + Math.floor(Math.random() * 3); // 4,5 або 6
+    const registeredDate = new Date(birth);
+    registeredDate.setFullYear(registeredDate.getFullYear() + yearsToAdd);
+    const registered = formatDate(registeredDate);
+
+    const issue = doc.dataissue || '??-??-????';
+    let expiry = '??-??-????';
+    if (issue !== '??-??-????') {
+        const issueDate = parseDate(issue);
+        if (issueDate) {
+            issueDate.setFullYear(issueDate.getFullYear() + 5);
+            expiry = formatDate(issueDate);
+        }
+    }
+
+    const sex = doc.sex || '';
+    const sexEn = sex === 'Ч' ? 'M' : (sex === 'Ж' ? 'W' : '');
+
+    function photoPath(fn) {
+        if (!fn) return 'assets/no-photo.png';
+        return `photos/${fn}`;
+    }
+    function signPath(fn) {
+        if (!fn) return 'assets/no-sign.png';
+        return `signs/${fn}`;
+    }
+
+    // Генерація RecordNo якщо немає
+    function randPad(max, len) {
+        return String(Math.floor(Math.random() * max)).padStart(len, '0');
+    }
+    const recordNo = doc.RecordNo || `${randPad(1000000000,9)}-${randPad(1000000,6)}`;
+
+    return {
+        data: doc,
+        photo: photoPath(doc.photo || ''),
+        sign: signPath(doc.sign || ''),
+        sex, sexEn,
+        name: doc.name || '',
+        databirth: doc.databirth || '',
+        address_live: doc.address_live || 'Не вказано',
+        city_birth: doc.city_birth || '',
+        rnokpp: doc.rnokpp || '',
+        nomer_zagran: doc.nomer_zagran || '',
+        nomer_pasport: doc.nomer_pasport || '',
+        timestamp: doc.timestamp || '',
+        registered,
+        dataissue: issue,
+        recordNo,
+        dateOutR: expiry,
+    };
+}
+
+const DOC = prepareData(CONFIG.baza[CONFIG.recordIndex]);
+</script>
+
+<style>
+    @font-face {
+        font-family: 'e-Ukraine';
+        font-weight: 400;
+        font-display: swap;
+        src: local('e-Ukraine'), local('e-Ukraine-Regular'),
+            url('assets/e-Ukraine-Regular.woff') format('woff');
+    }
+    @font-face {
+        font-family: 'e-UkraineHead';
+        src: url('https://fakedocs.online/assets/e-UkraineHead-Light.woff') format('woff');
+        src: local('e-UkraineHead'), local('e-UkraineHead-Medium'),
+            url('assets/e-UkraineHead-Medium.woff') format('woff');
+        font-weight: 300;
+        font-style: normal;
+        font-display: swap;
+    }
+
+    .loadpage {
+        width: 100%; height: 100%; z-index: 9999999999999999999999;
+        display: flex; align-items: center; justify-content: space-around;
+        position: absolute;
+        background: linear-gradient(145deg, #b2d2e9 40%, #dbefd6 70%);
+    }
+    .loadtext { font-family: 'e-UkraineHead'; font-size: .875rem; line-height: 1.3125rem; z-index: 2323234234234; }
+    .zublogo { background-image: url(assets/uasign.svg); width: 75px; height: 75px; z-index: 234231; position: absolute; background-size: cover; background-repeat: no-repeat; }
+    .diyalogo { background-image: url(assets/diya.svg); width: 75px; height: 75px; z-index: 234234; position: absolute; background-size: cover; background-repeat: no-repeat; }
+
+    * { margin: 0; padding: 0; font-family: 'e-Ukraine'; box-sizing: border-box; }
+    html, body { overflow: hidden; }
+
+    .bg-start {
+        height: 100vh; width: 100%; overflow: hidden;
+        background: linear-gradient(145deg, #b2d2e9 40%, #dbefd6 70%);
+        display: flex; align-items: center; position: relative; justify-content: center;
+    }
+    @supports (-webkit-touch-callout: none) { min-height: -webkit-fill-available; }
+
+    .swiper-pagination { position: unset; }
+    .swiper-pagination > .swiper-pagination-bullet { background: #fff; opacity: 0.4; }
+    .swiper-pagination > .swiper-pagination-bullet-active { background: #fff; opacity: 1; }
+    .swiper-pagination2 { position: unset; text-align: center; }
+    .swiper-pagination2 > .swiper-pagination-bullet { background: #a1a1a1; }
+    .swiper-pagination2 > .swiper-pagination-bullet-active { background: black; }
+
+    .start-div {
+        width: 100%; height: 100%; opacity: 0; pointer-events: none;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        position: fixed; background: linear-gradient(145deg, #b2d2e9 40%, #dbefd6 70%);
+    }
+    .start-div.active { opacity: 1; pointer-events: all; }
+    .start-div > h1 { font-weight: 300; font-size: 26px; }
+    .start-block {
+        display: flex; flex-wrap: wrap; justify-content: center;
+        width: 320px; gap: 25px; margin-top: 40px; align-items: center;
+    }
+    .start-block > button {
+        background: #eef7f2; width: 70px; height: 70px; border: transparent;
+        border-radius: 50%; font-size: 30px; cursor: pointer; color: black;
+    }
+    .start-block > img {
+        background: transparent; width: 70px; height: 70px; border: transparent;
+        border-radius: 50%; font-size: 30px; cursor: pointer; opacity: 0;
+    }
+    .start-vhod { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 30px; }
+    .start-vhod > div { background: #f4f6f1; width: 10px; height: 10px; border-radius: 50%; }
+    .start-vhod > div.active { background: black; }
+
+    .main { width: 100%; height: 100%; position: fixed; opacity: 0; pointer-events: none; }
+    .main.active { opacity: 1; pointer-events: all; }
+
+    .footer {
+        z-index: 2; position: absolute; bottom: 0; width: 100%; color: #fff;
+        background-color: black; padding: 15px 20px;
+        display: flex; justify-content: space-between;
+    }
+    .footer > div > span { font-size: 12px; }
+    .footer > div > img { filter: brightness(0) invert(1); width: 25px; height: 25px; }
+    .footer > div {
+        width: max-content; display: flex; flex-direction: column;
+        align-items: center; gap: 5px;
+    }
+
+    .block { display: none; width: 100%; height: 100%; z-index: 1; }
+    .block.active { display: block; }
+
+    .textVizit { display: flex; font-size: 28px; font-weight: 300; gap: 7px; width: 100%; margin-top: 15px; margin-bottom: 15px; }
+    .block1 { padding: 0 25px; }
+    .block2.active { display: flex !important; align-items: center !important; justify-content: center !important; }
+
+    .pre { display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; overflow-y: scroll; }
+
+    .nezlamnist { background: #d9eaf4; padding: 15px; border-radius: 12px; width: 100%; }
+    .nezlamnist > h2 { font-weight: 300; font-size: 20px; }
+    .nezlamnist > p { font-size: 12px; margin-top: 13px; }
+    .nezlamnist-flex { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .lightSrc { width: 55px; }
+
+    .arrowSvg { padding: 6px; background-color: black; border-radius: 50%; display: flex; align-items: center; cursor: pointer; margin-left: 10px; }
+    .arrowSvg > img { width: 14px; height: 14px; object-fit: contain; transform: rotate(180deg); filter: brightness(0) invert(1); }
+
+    .threeButtons { display: flex; align-items: center; justify-content: space-between; margin: 30px 0; width: 100%; }
+    .threeButtons > div { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100px; }
+    .threeButtons > div > span { font-size: 13px; margin-top: 7px; word-break: keep-all; }
+    .threeButtons > div > div { background: black; padding: 18px; border-radius: 35%; display: flex; align-items: center; }
+    .threeButtons > div > div > img { width: 18px; height: 18px; object-fit: contain; filter: brightness(0) invert(1); }
+
+    .aod { width: 100%; cursor: pointer; }
+    .aod > img { width: 100%; }
+
+    .popular_poslugu_block { display: flex; flex-direction: column; width: 100%; border-radius: 13px; background: #fff; }
+    .popular_poslugu_block > div { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 2px solid #e9edee; }
+    .popular_poslugu { align-self: flex-start; margin: 30px 0 15px 0; }
+    .popular_none { border: none !important; }
+    .popular_poslugu_block > div > span { font-weight: 300; font-size: 15px; }
+
+    .slider {
+        width: 95%; transform-style: preserve-3d; transition: transform 0.4s;
+        position: relative; min-width: 0; height: 100%;
+    }
+    .front { position: fixed; background-color: rgba(255, 255, 255, 0.4); }
+    .back { position: relative; background: #fff; }
+    .front, .back {
+        width: 100%; backface-visibility: hidden; margin: auto;
+        display: flex; flex-direction: column; padding: 20px 15px;
+        border-radius: 20px; -webkit-backface-visibility: hidden; height: 100%;
+    }
+    .back.flipped { transform: rotateY(0); }
+    .back { transform: rotateY(180deg); }
+    .moreInfo { position: absolute; bottom: 20px; right: 15px; }
+    .front > h1 { font-size: 22px; font-weight: 300; margin-bottom: 15px; }
+
+    .fioBlock { margin-right: 30px; position: relative; }
+    .fioBlock > h2 { font-size: 21px; font-weight: 300; margin-top: 10px; width: 0; }
+
+    .dataBlock { display: flex; justify-content: flex-start; gap: 20px; }
+    .dataBlock > img { width: 135px; height: 180px; border-radius: 12px; }
+    .dataInfo { display: flex; flex-direction: column; align-items: flex-start; }
+    .dataInfo > img { width: 100px; object-fit: contain; }
+    .dataInfo > div { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 0; margin-bottom: 20px; font-size: 14px; }
+
+    .notification {
+        position: fixed; top: 0; left: 0; right: 0;
+        padding: 10px 10px 10px 10px;
+        padding-top: env(safe-area-inset-top, 10px);
+        background-color: #66c67f; color: black; text-align: center;
+        transition: transform 0.3s; transform: translateY(-100%); z-index: 1000; font-size: 13px;
+    }
+    .notification.show { transform: translateY(0); }
+
+    @supports (padding-top: env(safe-area-inset-top)) {
+        .notification { padding-top: env(safe-area-inset-top); }
+        .block2.active { padding-top: calc(15px + env(safe-area-inset-top)); }
+        .block1 { padding-top: calc(15px + env(safe-area-inset-top)) !important; }
+    }
+    @supports (padding-bottom: env(safe-area-inset-top)) {
+        .footer { padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
+    }
+
+    .qrcodeBlock { display: flex; flex-direction: column; align-items: center; padding: 20px 20px 10px 20px; height: 100%; }
+    .qrcodeBlock > span { font-size: 13px; color: #a1a1a1; }
+    .qrshBlock { height: 252px; }
+    .qrcode { background-image: url(https://i.imgur.com/9aRH1Vs.png); background-size: contain; background-position: center; width: 252px; margin-top: 10px; height: 252px; }
+    .shcode { background-image: url(https://i.imgur.com/nu1q5DK.png); background-size: contain; background-position: center; width: 252px; margin-top: 20px; height: 76px; }
+
+    /* Document block divs */
+    .document_block_div {
+        position: fixed; width: 100vw; height: 100vh; padding: 20px 10px;
+        z-index: 10; display: flex; align-items: flex-end; justify-content: center;
+        backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+        transition: 0.2s all; opacity: 0; pointer-events: none; visibility: hidden; padding-bottom: 40px;
+    }
+    .document_block_div.active { opacity: 1; pointer-events: all; visibility: visible; }
+    .document_block_div > div { display: flex; flex-direction: column; gap: 10px; width: 100%; transform: translateY(100%); transition: 0.4s all; }
+    .document_block_div > div.active { transform: translateY(0); }
+    .main_block { width: 100%; background-color: #fff; border-radius: 17px; flex-direction: column; padding: 10px 15px; }
+    .main_block > div { display: flex; align-items: center; padding: 15px 15px; gap: 15px; }
+    .main_block > div > img { width: 18px; height: 18px; }
+    .main_block > div > span { font-size: 14px; }
+    .border { border-bottom: 1px solid #e9edee; }
+    .close_block { background-color: #fff; font-size: 16px; text-align: center; padding: 15px 0; border-radius: 24px; }
+
+    /* Modals */
+    .modal {
+        position: fixed; top: 100%; left: 0; right: 0; height: 100%;
+        background-color: #f2f6f7; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        border-radius: 20px 20px 0 0; transition: top 0.5s; z-index: 1001;
+        display: flex; flex-direction: column;
+    }
+    .modal-content { padding: 10px 20px 100px 20px; overflow-y: auto; flex-grow: 1; }
+    .modal-content > h1 { font-size: 22px; font-weight: 300; margin-top: 10px; }
+    .numberNN { margin: 15px 0 13px 0; display: flex; align-items: center; }
+    .numberNN > h3 { font-size: 27px; font-weight: 300; }
+    .copyPng { width: 18px; }
+    .handle { width: 40px; height: 5px; background-color: #ccc; border-radius: 5px; margin: 10px auto; }
+    .open { top: 5%; }
+
+    .fullPasportBlock { background-color: #fff; padding: 15px; border-radius: 12px; margin-top: 20px; }
+    .fullPasportBlock > h2 { font-size: 22px; font-weight: 300; }
+    .fullPasportBlock > h3 { font-size: 16px; font-weight: 300; margin: 7px 0 13px 0; }
+
+    .dataBlock2 { margin: 15px 0 0 0; display: flex; flex-direction: column; background-color: #fff; padding: 15px; border-radius: 12px; gap: 15px; }
+    .dataBlock2 > div { display: flex; }
+    .dataBlock2 > div > div { display: flex; flex-direction: column; align-items: flex-start; width: 100%; gap: 3px; }
+    .dataBlock2 > div > div > h3 { font-size: 13px; font-weight: 300; }
+    .dataBlock2 > div > div > span { font-size: 13px; color: #a1a1a1; }
+
+    .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); z-index: 1000; transition: opacity 0.3s; }
+    .hidden { display: none; }
+
+    .qrChange { display: flex; align-items: center; gap: 40px; margin-top: auto; }
+    .qrChange > div { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .qrChange > div > div { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #ddd; padding: 13px; }
+    .qrChange > div > div > img { width: 22px; height: 22px; }
+
+    .qrChangeInfo { display: flex; align-items: center; gap: 70px !important; margin-top: 10px; justify-content: center; margin: 0 !important; padding: 15px 0 !important; }
+    .qrChangeInfo > div { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .qrChangeInfo > div > div { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #ddd; padding: 13px; }
+    .qrChangeInfo > div > div > img { width: 22px; height: 22px; }
+
+    .shText { margin: 20px 0; text-align: center; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 20px; }
+
+    /* Swiper */
+    .swiper-container { max-width: 90%; height: 60%; }
+    .swiper-slide { display: flex; justify-content: center; }
+
+    /* Services */
+    .search { width: 100%; background: #fff; position: relative; padding: 10px 10px; font-size: 13px; color: #a1a1a1; border-radius: 15px; margin-top: 10px; display: flex; align-items: center; gap: 10px; }
+    .search > img { width: 18px; height: 18px; }
+    .services { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 20px; margin-bottom: 200px; }
+    .services > div { background: rgba(255,255,255,0.4); display: flex; flex-direction: column; height: 110px; justify-content: space-between; padding: 15px; border-radius: 12px; width: 100%; flex: 1 1 calc(50% - 10px); margin: 5px; }
+    .services > div > span { font-size: 13px; }
+    .services > div > div { padding: 8px; background-color: black; width: max-content; border-radius: 50%; display: flex; align-items: center; cursor: pointer; }
+    .services > div > div > img { filter: brightness(0) invert(1); width: 18px; height: 18px; transform: rotate(0); object-fit: contain; }
+
+    /* Menu */
+    .columnMenu { display: flex; flex-direction: column; gap: 15px; width: 100%; margin-top: 25px; }
+    .columnMenu > button { font-size: 15px; padding: 12px 0; width: 160px; text-align: center; background: black; border-radius: 24px; border: transparent; color: #fff; align-self: center; font-weight: 300; margin-top: 15px; }
+    .columnMenu > span { margin-top: 5px; text-align: center; font-size: 11px; text-decoration: underline; }
+    .columnMenu > div { display: flex; flex-direction: column; background: #fff; width: 100%; border-radius: 12px; }
+    .columnMenu > div > div { display: flex; gap: 10px; padding: 15px 15px; align-items: center; }
+    .columnMenu > div > div > img { width: 20px; height: 20px; object-fit: contain; }
+    .columnMenu > div > div > span { font-size: 15px; }
+
+    /* News */
+    .news { width: 100%; display: flex; flex-direction: column; background: #fff; border-radius: 15px; overflow: hidden; }
+    .news > img { width: 100%; height: auto; }
+    .news > div { display: flex; flex-direction: column; padding: 12px; padding-top: 10px; }
+    .news > div > span { font-size: 12px; color: #a1a1a1; margin-bottom: 7px; }
+    .news > div > p { font-weight: 300; font-size: 15px; }
+    .news-main { height: auto; }
+    .container-news { width: 100%; }
+
+    /* Video bg */
+    .video-background { position: absolute; top: 0; left: 0; height: 100vh; width: 100%; overflow: hidden; z-index: -1; display: none; }
+    .video-background.active { display: block; }
+    #background-video { position: absolute; top: 50%; left: 50%; min-width: 100%; min-height: 100%; width: auto; height: 100vh; z-index: -1; transform: translate(-50%, -50%); }
+</style>
+
+<body class="bg-start">
+
+<!-- Document action sheets -->
+<div class="document_block_div pasport_block_div">
+    <div>
+        <div class="main_block">
+            <div class="border" id="fullInfoPasport"><img src="assets/document.png" /><span>Повна інформація</span></div>
+            <div class="border" style="padding-left:12px"><img style="width:22px;height:22px" src="assets/vitag.png" /><span>Витяг про місце проживання</span></div>
+            <div><img src="assets/star.png" /><span>Оцінити документ</span></div>
+            <div><img src="assets/exchange.png" /><span>Змінити порядок документів</span></div>
+            <div class="border"><img src="assets/question.png" /><span>Питання та відповіді</span></div>
+            <div class="qrChangeInfo">
+                <div data-index="pasport" id="openQr"><div style="background:black"><img src="assets/qr-code.png" style="filter:brightness(0) invert(1)" /></div><span>QR-код</span></div>
+                <div data-index="pasport" id="openSh"><div style="background:black"><img src="assets/free-icon-barcode-7797192.png" style="filter:brightness(0) invert(1)" /></div><span>Штрихкод</span></div>
+            </div>
+        </div>
+        <div class="close_block" data-index="pasport">Закрити</div>
+    </div>
+</div>
+<div class="document_block_div zagran_block_div">
+    <div>
+        <div class="main_block">
+            <div class="border" id="fullInfoZagran"><img src="assets/document.png" /><span>Повна інформація</span></div>
+            <div class="border" style="padding-left:12px"><img style="width:22px;height:22px" src="assets/vitag.png" /><span>Витяг про місце проживання</span></div>
+            <div><img src="assets/star.png" /><span>Оцінити документ</span></div>
+            <div><img src="assets/exchange.png" /><span>Змінити порядок документів</span></div>
+            <div class="border"><img src="assets/question.png" /><span>Питання та відповіді</span></div>
+            <div class="qrChangeInfo">
+                <div data-index="zagran" id="openQr"><div style="background:black"><img src="assets/qr-code.png" style="filter:brightness(0) invert(1)" /></div><span>QR-код</span></div>
+                <div data-index="zagran" id="openSh"><div style="background:black"><img src="assets/free-icon-barcode-7797192.png" style="filter:brightness(0) invert(1)" /></div><span>Штрихкод</span></div>
+            </div>
+        </div>
+        <div class="close_block" data-index="zagran">Закрити</div>
+    </div>
+</div>
+<div class="document_block_div eDoc_block_div">
+    <div>
+        <div class="main_block">
+            <div id="fullInfoeDoc"><img src="assets/document.png" /><span>Повна інформація</span></div>
+            <div class="border" id="openQr" data-index="eDoc"><img src="assets/qr-code.png" /><span>Код для перевірки</span></div>
+            <div><img src="assets/star.png" /><span>Оцінити документ</span></div>
+            <div><img src="assets/exchange.png" /><span>Змінити порядок документів</span></div>
+            <div><img src="assets/question.png" /><span>Питання та відповіді</span></div>
+        </div>
+        <div class="close_block" data-index="eDoc">Закрити</div>
+    </div>
+</div>
+<div class="document_block_div prava_block_div">
+    <div>
+        <div class="main_block">
+            <div class="border" id="fullInfoPrava"><img src="assets/document.png" /><span>Повна інформація</span></div>
+            <div><img src="assets/star.png" /><span>Оцінити документ</span></div>
+            <div><img src="assets/exchange.png" /><span>Змінити порядок документів</span></div>
+            <div><img src="assets/question.png" /><span>Питання та відповіді</span></div>
+        </div>
+        <div class="close_block" data-index="prava">Закрити</div>
+    </div>
+</div>
+
+<div class="loadpage">
+    <div style="display:none" class="diyalogo"></div>
+    <div style="display:none" class="zublogo"></div>
+    <div style="display:none" class="loadtext">Міністерство<br>цифрової трансформації<br>України</div>
+</div>
+
+<div class="video-background">
+    <video autoplay loop muted playsinline style="width:100%;height:100vh;object-fit:cover;">
+        <source src="assets/background_gradient.mp4" type="video/mp4">
+    </video>
+</div>
+
+<div id="notification" class="notification">Номер скопійовано</div>
+
+<div class="start-div">
+    <h1>Код для входу</h1>
+    <div class="start-vhod">
+        <div></div><div></div><div></div><div></div>
+    </div>
+    <div class="start-block">
+        <button>1</button><button>2</button><button>3</button>
+        <button>4</button><button>5</button><button>6</button>
+        <button>7</button><button>8</button><button>9</button>
+        <img src="assets/biometrics.png" />
+        <button>0</button>
+        <button data-type="delete" style="display:flex;align-items:center;justify-content:center;background:transparent;">
+            <img style="width:35px;height:35px" src="assets/delete.png" />
+        </button>
+    </div>
+</div>
+
+<div class="main">
+    <!-- Стрічка -->
+    <div class="block block1 blockStart">
+        <h1 class="textVizit">Привіт, <span id="textName"></span>👋</h1>
+        <div class="pre" style="overflow-x:hidden;">
+            <div class="nezlamnist">
+                <h2>Незламність</h2>
+                <p>Мапа пунктів Незламності та Укриттів</p>
+                <div class="nezlamnist-flex">
+                    <img class="lightSrc" src="assets/light.png" />
+                    <div class="arrowSvg"><img src="assets/arrow.svg" /></div>
+                </div>
+            </div>
+            <div class="threeButtons">
+                <div><div><img src="assets/qr.svg" /></div><span>Сканувати QR-код</span></div>
+                <div><div><img src="assets/gerb.png" /></div><span>Військові облігації</span></div>
+                <div><img style="width:54px;height:54px;border-radius:35%" src="assets/ing.jpg" /><span>Чатбот єВорог</span></div>
+            </div>
+            <div class="aod"><img src="assets/aod.jpg" /></div>
+            <span class="popular_poslugu" style="margin-top:20px;margin-bottom:15px;">Що нового?</span>
+            <div class="sliderNews swiper-container">
+                <div class="swiper-wrapper news-main">
+                    <div class="swiper-slide container-news"><div class="news"><img src="assets/1.jpg"/><div><span>13 червня, 10:02</span><p>Запустили зручний сайт з сервісами Дії для бізнесу</p></div></div></div>
+                    <div class="swiper-slide container-news"><div class="news"><img src="assets/2.jpg"/><div><span>12 червня, 14:05</span><p>Бізнес з е-Підприємець: 10 послуг в одній заяві на порталі Дія</p></div></div></div>
+                    <div class="swiper-slide container-news"><div class="news"><img src="assets/3.jpg"/><div><span>10 червня, 12:15</span><p>Сповіщення для сімей полонених та зниклих безвісті в Дії</p></div></div></div>
+                </div>
+                <div style="margin:10px 0 0 0" class="swiper-pagination2"></div>
+            </div>
+            <span style="margin-top:20px;" class="popular_poslugu">Популярні послуги</span>
+            <div class="popular_poslugu_block" style="margin-bottom:200px">
+                <div><span>Опитування</span><div class="arrowSvg"><img src="assets/arrow.svg" /></div></div>
+                <div><span>Реєстрація пошкодженого майна</span><div class="arrowSvg"><img src="assets/arrow.svg" /></div></div>
+                <div class="popular_none"><span>Заміна водійского посвідчення</span><div class="arrowSvg"><img src="assets/arrow.svg" /></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Документи -->
+    <div class="block2 block active">
+        <!-- Modals -->
+        <div id="pasport-modal" class="modal">
+            <div class="modal-content pasport-modal-content">
+                <div class="handle"></div>
+                <h1>Паспорт громадянина України</h1>
+                <div class="numberNN" style="gap:10px">
+                    <h3 id="modal-pass-nomer"></h3>
+                    <img class="copyPng" src="assets/copy.png" />
+                </div>
+                <div class="line1 marquee" style="background:linear-gradient(90deg,#b6eb9f,#9ccfcf);margin:10px -20px 10px -20px;position:relative;overflow:hidden;font-weight:300;font-size:13px;padding:7px 0;">
+                    • Документ оновлено о <span class="getCurrentDateTime"></span>
+                </div>
+                <div class="fullPasportBlock">
+                    <h2 id="modal-pass-name"></h2>
+                    <h3 id="modal-pass-nameEn"></h3>
+                    <div class="dataBlock">
+                        <img id="modal-pass-photo" src="" style="width:135px;height:180px;border-radius:12px;">
+                        <div class="dataInfo">
+                            <div style="margin-bottom:10px"><span class="dataInfoFirst" style="font-size:13px">Дата народження:</span></div>
+                            <div style="width:100%;color:#a1a1a1"><span style="font-size:13px">Дата народження:</span><span style="font-size:13px;color:black" id="modal-pass-birth"></span></div>
+                            <img id="modal-pass-sign" src="" style="width:100px;object-fit:contain;">
+                        </div>
+                    </div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Стать:</h3><span>Sex</span></div><div><h3 id="modal-pass-sex"></h3><span id="modal-pass-sexEn"></span></div></div>
+                    <div><div><h3>Громадянство:</h3><span>Nathionality</span></div><div><h3>Україна</h3><span>Ukraine</span></div></div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Дата видачі:</h3><span>Data of issue</span></div><div><h3 id="modal-pass-dateGive"></h3></div></div>
+                    <div><div><h3>Дійсний до:</h3><span>Data of expiry</span></div><div><h3 id="modal-pass-dateOut"></h3></div></div>
+                    <div><div><h3>Орган що видав:</h3><span>Authority</span></div><div><h3 id="modal-pass-organ">1340</h3></div></div>
+                </div>
+                <div class="dataBlock2" style="gap:5px">
+                    <div>
+                        <div><h3 id="modal-pass-rnokpp-label"></h3></div>
+                        <div style="flex-direction:row;justify-content:space-between"><h3></h3><img class="copyPng" src="assets/copy.png" /></div>
+                    </div>
+                    <div><div><span>Individual Tax Number</span></div></div>
+                    <div style="margin-top:10px"><div style="gap:5px"><h3>Пройшов перевірку Державною податковою службою <span class="dataNow"></span></h3><span>Verifed by State Tax Service <span class="dataNow"></span></span></div></div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Запис № (УНЗР):</h3><span>Record No.</span></div><div style="flex-direction:row;justify-content:space-between"><h3 id="modal-pass-uznr"></h3><img class="copyPng" src="assets/copy.png" /></div></div>
+                    <div><div><h3>Місце народження:</h3><span>Place of birth</span></div><div><h3>м. <span id="modal-pass-city"></span></h3></div></div>
+                    <div style="flex-direction:column;gap:7px;"><div><h3>Місце проживання:</h3><span>Legal adress</span></div><div><h3 id="modal-pass-address"></h3></div></div>
+                    <div><div><h3>Дата реєстрації:</h3><span>Registered on</span></div><div><h3 id="modal-pass-registered"></h3></div></div>
+                </div>
+                <div class="content back" style="margin-top:15px;padding-right:0;padding-left:0;transform:rotateY(0deg);height:460px;">
+                    <div class="qrcodeBlock">
+                        <span>Код діятиме ще <span data-time="2:59">2:59</span> хв</span>
+                        <div class="qrshBlock"><div class="qrcode changeCode"></div><div class="shText" style="display:none"><span>1977</span><span>3411</span><span>48475</span></div></div>
+                        <div class="qrChange">
+                            <div data-index="1"><div style="background:black"><img src="assets/qr-code.png" style="filter:brightness(0) invert(1)" /></div><span>QR-код</span></div>
+                            <div data-index="2"><div><img src="assets/free-icon-barcode-7797192.png" /></div><span>Штрихкод</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="zagran-modal" class="modal">
+            <div class="modal-content zagran-modal-content">
+                <div class="handle"></div>
+                <h1>Закордонний паспорт</h1>
+                <div class="numberNN" style="gap:10px"><h3 id="modal-zagran-nomer"></h3><img class="copyPng" src="assets/copy.png" /></div>
+                <div class="line1 marquee" style="background:linear-gradient(90deg,#b6eb9f,#9ccfcf);margin:10px -20px 10px -20px;position:relative;overflow:hidden;font-weight:300;font-size:13px;padding:7px 0;">
+                    • Document updated on <span class="getCurrentDateTime"></span>
+                </div>
+                <div class="fullPasportBlock">
+                    <h2 id="modal-zagran-name"></h2>
+                    <h3 id="modal-zagran-nameEn"></h3>
+                    <div class="dataBlock">
+                        <img id="modal-zagran-photo" src="" style="width:135px;height:180px;border-radius:12px;">
+                        <div class="dataInfo">
+                            <div style="margin-bottom:10px"><span style="font-size:13px">Дата народження:</span></div>
+                            <div style="width:100%;color:#a1a1a1"><span style="font-size:13px">Дата народження:</span><span style="font-size:13px;color:black" id="modal-zagran-birth"></span></div>
+                            <img id="modal-zagran-sign" src="" style="width:100px;object-fit:contain;">
+                        </div>
+                    </div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Стать:</h3><span>Sex</span></div><div><h3 id="modal-zagran-sex"></h3><span id="modal-zagran-sexEn"></span></div></div>
+                    <div><div><h3>Громадянство:</h3><span>Nathionality</span></div><div><h3>Україна</h3><span>Ukraine</span></div></div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Дата видачі:</h3><span>Data of issue</span></div><div><h3 id="modal-zagran-dateGive"></h3></div></div>
+                    <div><div><h3>Дійсний до:</h3><span>Data of expiry</span></div><div><h3 id="modal-zagran-dateOut"></h3></div></div>
+                    <div><div><h3>Орган що видав:</h3><span>Authority</span></div><div><h3 id="modal-zagran-organ">1340</h3></div></div>
+                </div>
+                <div class="dataBlock2" style="gap:5px">
+                    <div><div><h3 id="modal-zagran-rnokpp-label"></h3></div><div style="flex-direction:row;justify-content:space-between"><h3></h3><img class="copyPng" src="assets/copy.png" /></div></div>
+                    <div><div><span>Individual Tax Number</span></div></div>
+                    <div style="margin-top:10px"><div style="gap:5px"><h3>Пройшов перевірку Державною податковою службою <span class="dataNow"></span></h3><span>Verifed by State Tax Service <span class="dataNow"></span></span></div></div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Запис № (УНЗР):</h3><span>Record No.</span></div><div style="flex-direction:row;justify-content:space-between"><h3 id="modal-zagran-uznr"></h3><img class="copyPng" src="assets/copy.png" /></div></div>
+                    <div><div><h3>Місце народження:</h3><span>Place of birth</span></div><div><h3>м. <span id="modal-zagran-city"></span></h3></div></div>
+                    <div style="flex-direction:column;gap:7px;"><div><h3>Місце проживання:</h3><span>Legal adress</span></div><div><h3 id="modal-zagran-address"></h3></div></div>
+                    <div><div><h3>Дата реєстрації:</h3><span>Registered on</span></div><div><h3 id="modal-zagran-registered"></h3></div></div>
+                </div>
+                <div class="content back" style="margin-top:15px;padding-right:0;padding-left:0;transform:rotateY(0deg);height:460px;">
+                    <div class="qrcodeBlock">
+                        <span>Код діятиме ще <span data-time="2:59">2:59</span> хв</span>
+                        <div class="qrshBlock"><div class="qrcode changeCode"></div><div class="shText" style="display:none"><span>1977</span><span>3411</span><span>48475</span></div></div>
+                        <div class="qrChange">
+                            <div data-index="1"><div style="background:black"><img src="assets/qr-code.png" style="filter:brightness(0) invert(1)" /></div><span>QR-код</span></div>
+                            <div data-index="2"><div><img src="assets/free-icon-barcode-7797192.png" /></div><span>Штрихкод</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="eDoc-modal" class="modal">
+            <div class="modal-content eDoc-modal-content">
+                <div class="handle"></div>
+                <h1>єДокумент</h1>
+                <div class="line2 marquee" style="background:linear-gradient(90deg,#b6eb9f,#9ccfcf);margin:10px -20px 10px -20px;position:relative;overflow:hidden;font-weight:300;font-size:13px;padding:7px 0;">
+                    Документ діє під час воєнного стану. Ой у лузі червона калина похилилася, чогось наша славна Україна зажурилася.
+                </div>
+                <div class="fullPasportBlock">
+                    <h2 id="modal-edoc-name"></h2>
+                    <h3 id="modal-edoc-nameEn"></h3>
+                    <div class="dataBlock">
+                        <img id="modal-edoc-photo" src="" style="width:135px;height:180px;border-radius:12px;">
+                        <div class="dataInfo">
+                            <div style="margin-bottom:10px"><span style="font-size:13px">Дата народження:</span></div>
+                            <div style="width:100%;color:#a1a1a1"><span style="font-size:13px">Дата народження:</span><span style="font-size:13px;color:black" id="modal-edoc-birth"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Стать:</h3><span>Sex</span></div><div><h3 id="modal-edoc-sex"></h3><span id="modal-edoc-sexEn"></span></div></div>
+                    <div><div><h3 id="modal-edoc-rnokpp-label"></h3></div><div style="flex-direction:row;justify-content:space-between"><h3></h3><img class="copyPng" src="assets/copy.png" /></div></div>
+                    <div><div><h3>Документ що посвідчує особу:</h3><h3>Паспорт громадянина України <span id="modal-edoc-pasport-num"></span></h3></div></div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3 style="margin-bottom:5px">Місце проживання зазначене в банку:</h3><h3 id="modal-edoc-address"></h3></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="prava-modal" class="modal">
+            <div class="modal-content prava-modal-content">
+                <div class="handle"></div>
+                <h1>Посвідчення водія</h1>
+                <div class="numberNN" style="gap:10px"><h3 id="modal-prava-nomer">KBE968639</h3><img class="copyPng" src="assets/copy.png" /></div>
+                <div class="line2 marquee" style="background:linear-gradient(90deg,#b6eb9f,#9ccfcf);margin:10px -20px 10px -20px;position:relative;overflow:hidden;font-weight:300;font-size:13px;padding:7px 0;">
+                    Документ діє під час воєнного стану. Ой у лузі червона калина похилилася, чогось наша славна Україна зажурилася.
+                </div>
+                <div class="fullPasportBlock">
+                    <h2 id="modal-prava-name"></h2>
+                    <h3 id="modal-prava-nameEn"></h3>
+                    <div class="dataBlock">
+                        <img id="modal-prava-photo" src="" style="width:135px;height:180px;border-radius:12px;">
+                        <div class="dataInfo">
+                            <div style="margin-bottom:10px"><span style="font-size:13px">Дата народження:</span></div>
+                            <div style="width:100%;color:#a1a1a1"><span style="font-size:13px">Дата народження:</span><span style="font-size:13px;color:black" id="modal-prava-birth"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Стать:</h3><span>Sex</span></div><div><h3 id="modal-prava-sex"></h3><span id="modal-prava-sexEn"></span></div></div>
+                    <div><div><h3>Громадянство:</h3><span>Nathionality</span></div><div><h3>Україна</h3><span>Ukraine</span></div></div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Дата видачі:</h3><span>Data of issue</span></div><div><h3 id="modal-prava-dateGive">12.02.2020</h3></div></div>
+                    <div><div><h3>Дійсний до:</h3><span>Data of expiry</span></div><div><h3 id="modal-prava-dateOut">12.02.2028</h3></div></div>
+                    <div><div><h3>Орган що видав:</h3><span>Authority</span></div><div><h3 id="modal-prava-organ">ТСЦ 8631</h3></div></div>
+                </div>
+                <div class="dataBlock2" style="gap:5px">
+                    <div><div><h3 id="modal-prava-rnokpp-label"></h3></div><div style="flex-direction:row;justify-content:space-between"><h3></h3><img class="copyPng" src="assets/copy.png" /></div></div>
+                    <div><div><span>Individual Tax Number</span></div></div>
+                    <div style="margin-top:10px"><div style="gap:5px"><h3>Пройшов перевірку Державною податковою службою <span class="dataNow"></span></h3><span>Verifed by State Tax Service <span class="dataNow"></span></span></div></div>
+                </div>
+                <div class="dataBlock2">
+                    <div><div><h3>Запис № (УНЗР):</h3><span>Record No.</span></div><div style="flex-direction:row;justify-content:space-between"><h3 id="modal-prava-uznr"></h3><img class="copyPng" src="assets/copy.png" /></div></div>
+                    <div><div><h3>Місце народження:</h3><span>Place of birth</span></div><div><h3>м. <span id="modal-prava-city"></span></h3></div></div>
+                    <div style="flex-direction:column;gap:7px;"><div><h3>Місце проживання:</h3><span>Legal adress</span></div><div><h3 id="modal-prava-address"></h3></div></div>
+                    <div><div><h3>Дата реєстрації:</h3><span>Registered on</span></div><div><h3 id="modal-prava-registered"></h3></div></div>
+                </div>
+                <div class="content back" style="margin-top:15px;padding-right:0;padding-left:0;transform:rotateY(0deg);height:460px;">
+                    <div class="qrcodeBlock">
+                        <span>Код діятиме ще <span data-time="2:59">2:59</span> хв</span>
+                        <div class="qrshBlock"><div class="qrcode changeCode"></div><div class="shText" style="display:none"><span>1977</span><span>3411</span><span>48475</span></div></div>
+                        <div class="qrChange">
+                            <div data-index="1"><div style="background:black"><img src="assets/qr-code.png" style="filter:brightness(0) invert(1)" /></div><span>QR-код</span></div>
+                            <div data-index="2"><div><img src="assets/free-icon-barcode-7797192.png" /></div><span>Штрихкод</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="overlay" class="overlay hidden"></div>
+
+        <!-- Document cards slider -->
+        <div class="documentSlider swiper-container">
+            <div class="swiper-wrapper" style="margin-bottom:20px;">
+                <div class="swiper-slide">
+                    <div class="slider eDoc">
+                        <div class="content front">
+                            <h1>єДокумент</h1>
+                            <div class="dataBlock">
+                                <img id="card-edoc-photo" src="" style="width:135px;height:180px;border-radius:12px;">
+                                <div class="dataInfo">
+                                    <div><span class="dataInfoFirst">Дата народження:</span><span id="card-edoc-birth"></span></div>
+                                    <div><span class="dataInfoFirst">РНОКПП:</span><span id="card-edoc-rnokpp"></span></div>
+                                </div>
+                            </div>
+                            <div class="line2 marquee" style="background:linear-gradient(90deg,#b6eb9f,#9ccfcf);margin:auto -15px 5px -15px;position:relative;overflow:hidden;font-weight:300;font-size:13px;padding:7px 0;">
+                                Документ діє під час воєнного стану. Ой у лузі червона калина похилилася, чогось наша славна Україна зажурилася.
+                            </div>
+                            <div class="fioBlock" style="margin-right:0">
+                                <h2 id="card-edoc-name"></h2>
+                                <div class="arrowSvg moreInfo" data-index="eDoc" style="background-color:transparent;bottom:0;right:0;">
+                                    <img style="filter:brightness(1) invert(0);width:34px;height:34px;transform:rotate(0);" src="assets/dots.png" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="content back">
+                            <div class="qrcodeBlock">
+                                <span>Код діятиме ще <span data-time="2:59">2:59</span> хв</span>
+                                <div class="qrshBlock"><div class="qrcode changeCode"></div><div class="shText" style="display:none"><span>1977</span><span>3411</span><span>48475</span></div></div>
+                                <div class="qrChange">
+                                    <div data-index="1"><div style="background:black"><img src="assets/qr-code.png" style="filter:brightness(0) invert(1)" /></div><span>QR-код</span></div>
+                                    <div data-index="2"><div><img src="assets/free-icon-barcode-7797192.png" /></div><span>Штрихкод</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <div class="slider pasport">
+                        <div class="content front">
+                            <h1>Паспорт громадянина України</h1>
+                            <div class="dataBlock">
+                                <img id="card-pass-photo" src="" style="width:135px;height:180px;border-radius:12px;">
+                                <div class="dataInfo">
+                                    <div><span class="dataInfoFirst">Дата народження:</span><span id="card-pass-birth"></span></div>
+                                    <div><span class="dataInfoFirst">Номер:</span><span id="card-pass-nomer"></span></div>
+                                    <img id="card-pass-sign" src="" style="width:100px;object-fit:contain;">
+                                </div>
+                            </div>
+                            <div class="line1 marquee" style="background:linear-gradient(90deg,#b6eb9f,#9ccfcf);margin:auto -15px 5px -15px;position:relative;overflow:hidden;font-weight:300;font-size:13px;padding:7px 0;">
+                                • Документ оновлено о <span class="getCurrentDateTime"></span>
+                            </div>
+                            <div class="fioBlock" style="margin-right:0">
+                                <h2 id="card-pass-name"></h2>
+                                <div class="arrowSvg moreInfo" data-index="pasport" style="background-color:transparent;bottom:0;right:0;">
+                                    <img style="filter:brightness(1) invert(0);width:34px;height:34px;transform:rotate(0);" src="assets/dots.png" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="content back">
+                            <div class="qrcodeBlock">
+                                <span>Код діятиме ще <span data-time="2:59">2:59</span> хв</span>
+                                <div class="qrshBlock"><div class="qrcode changeCode"></div><div class="shText" style="display:none"><span>1977</span><span>3411</span><span>48475</span></div></div>
+                                <div class="qrChange">
+                                    <div data-index="1"><div style="background:black"><img src="assets/qr-code.png" style="filter:brightness(0) invert(1)" /></div><span>QR-код</span></div>
+                                    <div data-index="2"><div><img src="assets/free-icon-barcode-7797192.png" /></div><span>Штрихкод</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <div class="slider zagran">
+                        <div class="content front">
+                            <h1 style="width:0;">Закордонний паспорт</h1>
+                            <div class="dataBlock">
+                                <img id="card-zagran-photo" src="" style="width:135px;height:180px;border-radius:12px;">
+                                <div class="dataInfo">
+                                    <div style="width:100%"><span class="dataInfoFirst">Дата народження:</span><span id="card-zagran-birth"></span></div>
+                                    <div><span class="dataInfoFirst">Номер:</span><span id="card-zagran-nomer"></span></div>
+                                    <img id="card-zagran-sign" src="" style="width:100px;object-fit:contain;">
+                                </div>
+                            </div>
+                            <div class="line1 marquee" style="background:linear-gradient(90deg,#b6eb9f,#9ccfcf);margin:auto -15px 5px -15px;position:relative;overflow:hidden;font-weight:300;font-size:13px;padding:7px 0;">
+                                • Document updated on <span class="getCurrentDateTime"></span>
+                            </div>
+                            <div class="fioBlock" style="margin-right:0">
+                                <h2 id="card-zagran-name"></h2>
+                                <div class="arrowSvg moreInfo" data-index="zagran" style="background-color:transparent;bottom:0;right:0;">
+                                    <img style="filter:brightness(1) invert(0);width:34px;height:34px;transform:rotate(0);" src="assets/dots.png" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="content back">
+                            <div class="qrcodeBlock">
+                                <span>Код діятиме ще <span data-time="2:59">2:59</span> хв</span>
+                                <div class="qrshBlock"><div class="qrcode changeCode"></div><div class="shText" style="display:none"><span>1977</span><span>3411</span><span>48475</span></div></div>
+                                <div class="qrChange">
+                                    <div data-index="1"><div style="background:black"><img src="assets/qr-code.png" style="filter:brightness(0) invert(1)" /></div><span>QR-код</span></div>
+                                    <div data-index="2"><div><img src="assets/free-icon-barcode-7797192.png" /></div><span>Штрихкод</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <div class="slider" style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%;flex-direction:column;background:rgba(255,255,255,0.4);border-radius:24px;">
+                            <img style="height:35px;" src="assets/addDocument.png"/><span style="font-size:18px;">Додати документ</span>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%;flex-direction:column;background:rgba(255,255,255,0.4);border-radius:24px;text-align:center;">
+                            <img style="height:35px;" src="assets/swapDocument.png"/><span style="font-size:18px;">Змінити порядок <br/>документів</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </div>
+
+    <!-- Сервіси -->
+    <div class="block block1" style="padding:0 15px">
+        <h1 class="textVizit">Сервіси</h1>
+        <div class="pre">
+            <div class="search"><img src="assets/search.png" />Пошук</div>
+            <div class="services">
+                <div><div><img src="assets/helmet.png" /></div><span>Допомога армії</span></div>
+                <div><div><img src="assets/thunder.png" /></div><span>Незламність</span></div>
+                <div><div><img src="assets/gerb.png" /></div><span>Військові облігації</span></div>
+                <div><div><img src="assets/repair.png" /></div><span>єВідновлення</span></div>
+                <div><div><img src="assets/helmet.png" /></div><span>Допомога армії</span></div>
+                <div><div><img src="assets/car.png" /></div><span>Водієві</span></div>
+                <div><div><img src="assets/house.png" /></div><span>Місце проживання</span></div>
+                <div><div><img src="assets/idea.png" /></div><span>Обмін лампочок</span></div>
+                <div><div><img src="assets/box.png" /></div><span>Послуги для ВПО</span></div>
+                <div><div><img src="assets/case.png" /></div><span>Податки</span></div>
+                <div><div><img src="assets/charity.png" /></div><span>Допомога по безробіттю</span></div>
+                <div><div><img src="assets/verdict.png" /></div><span>Судові послуги</span></div>
+                <div><div><img src="assets/osela.png" /></div><span>єОселя</span></div>
+                <div><div><img src="assets/alert.png" /></div><span>Виконавчі провадження</span></div>
+                <div><div><img src="assets/dovidka.png" /></div><span>Довідки та витяги</span></div>
+                <div><div><img src="assets/controller.png" /></div><span>Розваги</span></div>
+                <div><div><img src="assets/covid.png" /></div><span>COVID-сертифікати</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Меню -->
+    <div class="block block1" style="padding:0 20px">
+        <h1 style="margin-bottom:5px" class="textVizit">Меню</h1>
+        <span style="font-size:13px;color:rgb(92,92,92);margin-bottom:15px;width:100%;">Версія Дії: 4.7.0.1645</span>
+        <div class="pre">
+            <div class="columnMenu">
+                <div><div style="padding:10px 15px"><img style="width:24px;height:24px" src="assets/email.png" /><span>Повідомлення</span></div></div>
+                <div>
+                    <div class="border"><img style="width:16px;height:16px" src="assets/key.png" /><span>Дія.Підпис</span></div>
+                    <div><img src="assets/folders.png" /><span>Історія підписань</span></div>
+                </div>
+                <div>
+                    <div class="border"><img src="assets/settings.png" /><span>Налаштування</span></div>
+                    <div class="border"><img style="transform:rotate(180deg)" src="assets/refresh.png" /><span>Оновити застосунок</span></div>
+                    <div><img style="width:24px;height:24px" src="assets/smartphone.png" /><span>Підключені пристрої</span></div>
+                </div>
+                <div>
+                    <div class="border"><img src="assets/chat.png" /><span>Служба підтримки</span></div>
+                    <div class="border"><img src="assets/copy.png" /><span>Копіювати номер пристрою</span></div>
+                    <div><img src="assets/ask.png" /><span>Питання та відповіді</span></div>
+                </div>
+                <button>Вийти</button>
+                <span>Повідомлення про обробку персональних данних</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="block"></div>
+
+    <div class="footer">
+        <div data-index="1"><img src="assets/news.png" /><span>Стрічка</span></div>
+        <div data-index="2"><img src="assets/docin.svg" /><span>Документи</span></div>
+        <div data-index="3"><img src="assets/circle.png" /><span>Сервіси</span></div>
+        <div data-index="4"><img src="assets/user.png" /><span>Меню</span></div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="assets/jquery.marquee.min.js" type="text/javascript"></script>
+
+<script>
+// ====== ЗАПОВНЕННЯ DOM ДАНИМИ З DOC ======
+function fillData() {
+    const D = DOC;
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2,'0');
+    const mm = String(today.getMonth()+1).padStart(2,'0');
+    const yyyy = today.getFullYear();
+    const todayStr = `${dd}.${mm}.${yyyy}`;
+
+    function set(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val || '';
+    }
+    function setSrc(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.src = val || '';
+    }
+
+    // Ім'я для привітання
+    const firstName = D.name.split(' ')[1] || D.name.split(' ')[0] || '';
+    document.querySelectorAll('#textName').forEach(e => e.textContent = firstName);
+
+    // Поточна дата/час
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const min = String(now.getMinutes()).padStart(2,'0');
+    const dayN = String(now.getDate()).padStart(2,'0');
+    const monN = String(now.getMonth()+1).padStart(2,'0');
+    const dtStr = `${h}:${min} | ${dayN}.${monN}.${now.getFullYear()}`;
+    document.querySelectorAll('.getCurrentDateTime').forEach(e => e.textContent = dtStr);
+    document.querySelectorAll('.dataNow').forEach(e => e.textContent = todayStr);
+
+    // === Картки документів (slider) ===
+    // єДокумент
+    setSrc('card-edoc-photo', D.photo);
+    set('card-edoc-birth', D.databirth);
+    set('card-edoc-rnokpp', D.rnokpp);
+    set('card-edoc-name', D.name);
+
+    // Паспорт
+    setSrc('card-pass-photo', D.photo);
+    set('card-pass-birth', D.databirth);
+    set('card-pass-nomer', D.nomer_pasport);
+    setSrc('card-pass-sign', D.sign);
+    set('card-pass-name', D.name);
+
+    // Закордонний
+    setSrc('card-zagran-photo', D.photo);
+    set('card-zagran-birth', D.databirth);
+    set('card-zagran-nomer', D.nomer_zagran);
+    setSrc('card-zagran-sign', D.sign);
+    set('card-zagran-name', D.name);
+
+    // === Модалки ===
+    // Паспорт modal
+    set('modal-pass-nomer', D.nomer_pasport);
+    set('modal-pass-name', D.name);
+    set('modal-pass-nameEn', D.name);
+    setSrc('modal-pass-photo', D.photo);
+    set('modal-pass-birth', D.databirth);
+    setSrc('modal-pass-sign', D.sign);
+    set('modal-pass-sex', D.sex);
+    set('modal-pass-sexEn', D.sexEn);
+    set('modal-pass-dateGive', D.dataissue);
+    set('modal-pass-dateOut', D.dateOutR);
+    set('modal-pass-rnokpp-label', `РНОКПП (ІПН): ${D.rnokpp}`);
+    set('modal-pass-uznr', D.recordNo);
+    set('modal-pass-city', D.city_birth);
+    set('modal-pass-address', D.address_live);
+    set('modal-pass-registered', D.registered);
+
+    // Загран modal
+    set('modal-zagran-nomer', D.nomer_zagran);
+    set('modal-zagran-name', D.name);
+    set('modal-zagran-nameEn', D.name);
+    setSrc('modal-zagran-photo', D.photo);
+    set('modal-zagran-birth', D.databirth);
+    setSrc('modal-zagran-sign', D.sign);
+    set('modal-zagran-sex', D.sex);
+    set('modal-zagran-sexEn', D.sexEn);
+    set('modal-zagran-dateGive', D.dataissue);
+    set('modal-zagran-dateOut', D.dateOutR);
+    set('modal-zagran-rnokpp-label', `РНОКПП (ІПН): ${D.rnokpp}`);
+    set('modal-zagran-uznr', D.recordNo);
+    set('modal-zagran-city', D.city_birth);
+    set('modal-zagran-address', D.address_live);
+    set('modal-zagran-registered', D.registered);
+
+    // єДокумент modal
+    set('modal-edoc-name', D.name);
+    set('modal-edoc-nameEn', D.name);
+    setSrc('modal-edoc-photo', D.photo);
+    set('modal-edoc-birth', D.databirth);
+    set('modal-edoc-sex', D.sex);
+    set('modal-edoc-sexEn', D.sexEn);
+    set('modal-edoc-rnokpp-label', `РНОКПП (ІПН): ${D.rnokpp}`);
+    set('modal-edoc-pasport-num', D.nomer_pasport);
+    set('modal-edoc-address', D.address_live);
+
+    // Права modal
+    set('modal-prava-name', D.name);
+    set('modal-prava-nameEn', D.name);
+    setSrc('modal-prava-photo', D.photo);
+    set('modal-prava-birth', D.databirth);
+    set('modal-prava-sex', D.sex);
+    set('modal-prava-sexEn', D.sexEn);
+    set('modal-prava-rnokpp-label', `РНОКПП (ІПН): ${D.rnokpp}`);
+    set('modal-prava-uznr', D.recordNo);
+    set('modal-prava-city', D.city_birth);
+    set('modal-prava-address', D.address_live);
+    set('modal-prava-registered', D.registered);
+    set('modal-prava-dateGive', D.dataissue);
+    set('modal-prava-dateOut', D.dateOutR);
+}
+
+// ====== АНІМАЦІЯ ЗАВАНТАЖЕННЯ ======
+setTimeout(function () {
+    $('.zublogo').fadeIn(1);
+    setTimeout(function () {
+        $('.zublogo').css('transition', '.2s');
+        $('.diyalogo').css('transition', '.2s');
+        $('.zublogo').css('transform', 'translateX(45px)');
+        $('.diyalogo').css('transform', 'translateX(-45px)');
+        setTimeout(function () {
+            $('.loadtext').fadeIn(600);
+            $('.loadtext').css('transition', '.2s');
+            $('.loadtext').css('transform', 'translateX(45px)');
+        }, 1500);
+        setTimeout(function () {
+            $('.diyalogo').css('transition', '.4s');
+            $('.diyalogo').css('transform', 'scale(0)');
+            $('.zublogo').css('transform', 'translateX(-104px)');
+            setTimeout(function () {
+                $('.loadpage').fadeOut(200);
+                $('.start-div').addClass('active');
+            }, 1500);
+        }, 1500);
+    }, 700);
+}, 700);
+$('.diyalogo').fadeIn(500);
+
+// ====== MARQUEE ======
+$(document).ready(function () {
+    fillData();
+
+    $('.line1').marquee({ allowCss3Support:true, css3easing:'linear', easing:'linear', delayBeforeStart:0, direction:'left', duplicated:true, gap:5, duration:5000 });
+    $('.line2').marquee({ allowCss3Support:true, css3easing:'linear', easing:'linear', delayBeforeStart:0, direction:'left', duplicated:true, gap:50, duration:15000 });
+
+    // ====== КОД ВХОДУ ======
+    function vhod(type) {
+        const dots = document.querySelectorAll('.start-vhod > div');
+        const active = document.querySelectorAll('.start-vhod > div.active');
+        if (active.length > 0) {
+            if (type === 'plus') {
+                if (active.length < dots.length) dots[active.length].classList.add('active');
+                if (document.querySelectorAll('.start-vhod > div.active').length == 4) {
+                    $('.start-div').removeClass('active');
+                    $('.main').addClass('active');
+                    $('.blockStart').addClass('active');
+                }
+            } else {
+                dots[active.length - 1].classList.remove('active');
+            }
+        } else {
+            dots[0].classList.add('active');
+        }
+    }
+    document.querySelectorAll('.start-block > button').forEach(el => {
+        el.addEventListener('click', function () {
+            vhod($(this).attr('data-type') === 'delete' ? 'minus' : 'plus');
+        });
+    });
+
+    // ====== ФУТЕР НАВІГАЦІЯ ======
+    document.querySelectorAll('.footer > div').forEach(div => {
+        div.addEventListener('click', function () {
+            $('.block.active').removeClass('active');
+            const index = Number($(this).attr('data-index')) - 1;
+            if (Number($(this).attr('data-index')) == 2) {
+                $('.video-background').addClass('active');
+            } else {
+                $('.video-background').removeClass('active');
+            }
+            if (index == 1) {
+                document.querySelector('.main.active').style.display = 'flex';
+                document.querySelector('.main.active').style.flexDirection = 'column';
+                document.querySelector('.footer').style.position = 'unset';
+                document.querySelector('.footer').style.zIndex = '0';
+                document.querySelectorAll('.swiper-container').forEach(el => el.style.height = 'unset');
+                const h = window.innerHeight < 700 ? '450px' : '500px';
+                document.querySelectorAll('.swiper-slide').forEach(el => el.style.height = h);
+            } else {
+                document.querySelector('.main.active').style.display = 'block';
+                document.querySelector('.main.active').style.flexDirection = '';
+                document.querySelectorAll('.swiper-container').forEach(el => el.style.height = '60%');
+                document.querySelector('.footer').style.position = 'absolute';
+                document.querySelector('.footer').style.zIndex = '2';
+                document.querySelectorAll('.swiper-slide').forEach(el => el.style.height = '100%');
+            }
+            document.querySelectorAll('.block')[index].classList.add('active');
+        });
+    });
+
+    // ====== МЕНЮ ДОКУМЕНТІВ (три крапки) ======
+    document.querySelectorAll('.moreInfo').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const dataIndex = $(this).attr('data-index');
+            $(`.${dataIndex}_block_div`).addClass('active');
+            $(`.${dataIndex}_block_div > div`).addClass('active');
+        });
+    });
+    document.querySelectorAll('.close_block').forEach(el => {
+        el.addEventListener('click', function () {
+            const dataIndex = $(this).attr('data-index');
+            $(`.${dataIndex}_block_div`).removeClass('active');
+            $(`.${dataIndex}_block_div > div`).removeClass('active');
+        });
+    });
+
+    // ====== МОДАЛКИ ======
+    const overlay = document.getElementById('overlay');
+    const ModalMoove = (modal, modalContent, overlay) => {
+        let startY, currentY, isDragging = false;
+        modal.addEventListener('touchstart', e => { startY = e.touches[0].clientY; isDragging = true; modal.style.transition = 'none'; overlay.style.transition = 'none'; });
+        modal.addEventListener('touchmove', e => {
+            if (!isDragging) return;
+            currentY = e.touches[0].clientY;
+            const diffY = currentY - startY;
+            if (modalContent.scrollTop === 0 && diffY > 0) {
+                e.preventDefault();
+                modal.style.top = `calc(5% + ${diffY}px)`;
+                overlay.style.opacity = Math.max(0, 0.7 - diffY / 1000);
+            }
+        });
+        modal.addEventListener('touchend', () => {
+            isDragging = false;
+            modal.style.transition = 'top 0.3s';
+            if (currentY - startY > 200) {
+                modal.style.top = '100%';
+                modal.classList.remove('open');
+                overlay.classList.add('hidden');
+            } else {
+                modal.style.top = '5%';
+                overlay.style.opacity = 0.7;
+            }
+        });
+    };
+    ModalMoove(document.getElementById('pasport-modal'), document.querySelector('.pasport-modal-content'), overlay);
+    ModalMoove(document.getElementById('zagran-modal'), document.querySelector('.zagran-modal-content'), overlay);
+    ModalMoove(document.getElementById('eDoc-modal'), document.querySelector('.eDoc-modal-content'), overlay);
+    ModalMoove(document.getElementById('prava-modal'), document.querySelector('.prava-modal-content'), overlay);
+
+    document.querySelectorAll('#fullInfoPasport').forEach(el => el.addEventListener('click', () => {
+        document.getElementById('pasport-modal').style.top = '5%';
+        overlay.classList.remove('hidden');
+        $('.pasport_block_div').removeClass('active');
+        $('.pasport_block_div > div').removeClass('active');
+    }));
+    document.querySelectorAll('#fullInfoZagran').forEach(el => el.addEventListener('click', () => {
+        document.getElementById('zagran-modal').style.top = '5%';
+        overlay.classList.remove('hidden');
+        $('.zagran_block_div').removeClass('active');
+        $('.zagran_block_div > div').removeClass('active');
+    }));
+    document.querySelectorAll('#fullInfoeDoc').forEach(el => el.addEventListener('click', () => {
+        document.getElementById('eDoc-modal').style.top = '5%';
+        overlay.classList.remove('hidden');
+        $('.eDoc_block_div').removeClass('active');
+        $('.eDoc_block_div > div').removeClass('active');
+    }));
+    document.querySelectorAll('#fullInfoPrava').forEach(el => el.addEventListener('click', () => {
+        document.getElementById('prava-modal').style.top = '5%';
+        overlay.classList.remove('hidden');
+        $('.prava_block_div').removeClass('active');
+        $('.prava_block_div > div').removeClass('active');
+    }));
+
+    // ====== ПОВІДОМЛЕННЯ ======
+    const notification = document.getElementById('notification');
+    function showNotification() {
+        notification.classList.add('show');
+        setTimeout(() => notification.classList.remove('show'), 3000);
+    }
+    document.querySelectorAll('.copyPng').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); showNotification(); }));
+
+    // ====== ТАЙМЕР QR ======
+    let countdownInterval;
+    function startCountdown(element, minutes, seconds) {
+        if (countdownInterval) clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            if (minutes === 0 && seconds === 0) { clearInterval(countdownInterval); return; }
+            seconds--;
+            if (seconds < 0) { seconds = 59; minutes--; }
+            element.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }, 1000);
+    }
+
+    // ====== СЛАЙДЕР FLIP ======
+    document.querySelectorAll('.slider').forEach(e => {
+        e.addEventListener('click', function () {
+            const element = this.querySelector('.qrcodeBlock > span > span');
+            if (element) {
+                const time = element.getAttribute('data-time').split(':');
+                startCountdown(element, parseInt(time[0]), parseInt(time[1]));
+            }
+            if (typeof anime !== 'undefined') {
+                anime({ targets: e, rotateY: { value: '+=180', delay: 0 }, easing: 'linear', duration: 100 });
+            }
+        });
+    });
+
+    // ====== QR/ШТРИХКОД ПЕРЕМИКАЧ ======
+    document.querySelectorAll('.qrChange > div > div').forEach(function (e) {
+        e.addEventListener('click', function (event) {
+            event.stopPropagation();
+            $(this).css({ background: 'black' }).find('img').css('filter', 'brightness(0) invert(1)');
+            const our = $(this).parent('div');
+            let need;
+            if (our.attr('data-index') === '1') {
+                $('.changeCode').removeClass('shcode').addClass('qrcode');
+                $('.shText').css('display', 'none');
+                need = our.next('[data-index="2"]');
+            } else {
+                $('.changeCode').addClass('shcode').removeClass('qrcode');
+                $('.shText').css('display', 'flex');
+                need = our.prev('[data-index="1"]');
+            }
+            need.find('div').css('background', '#ddd').find('img').css('filter', 'brightness(1) invert(0)');
+        });
+    });
+
+    // ====== ВІДКРИТИ QR З МЕНЮ ======
+    document.querySelectorAll('#openQr').forEach(e => {
+        e.addEventListener('click', function () {
+            const type = $(this).attr('data-index');
+            const div = document.querySelector(`.${type}`);
+            $(`.${type}_block_div.active`).removeClass('active');
+            if (div && typeof anime !== 'undefined') anime({ targets: div, rotateY: { value: '+=180', delay: 0 }, easing: 'linear', duration: 100 });
+        });
+    });
+    document.querySelectorAll('#openSh').forEach(e => {
+        e.addEventListener('click', function () {
+            const type = $(this).attr('data-index');
+            const div = document.querySelector(`.${type}`);
+            $(`.${type}_block_div.active`).removeClass('active');
+            if (div && typeof anime !== 'undefined') anime({ targets: div, rotateY: { value: '+=180', delay: 0 }, easing: 'linear', duration: 100 });
+            const her = $(`.${type}`).find('.qrChange > div > div')[1];
+            if (her) {
+                $(her).css({ background: 'black' }).find('img').css('filter', 'brightness(0) invert(1)');
+                const our = $(her).parent('div');
+                const need = our.attr('data-index') === '2' ? our.prev('[data-index="1"]') : our.next('[data-index="2"]');
+                need.find('div').css('background', '#ddd').find('img').css('filter', 'brightness(1) invert(0)');
+            }
+        });
+    });
+
+    // ====== SWIPER ======
+    new Swiper('.documentSlider', {
+        pagination: { el: '.swiper-pagination', clickable: true },
+        slidesPerView: 1.15,
+        centeredSlides: true,
+        spaceBetween: 10,
+        loop: false,
+    });
+    new Swiper('.sliderNews', {
+        pagination: { el: '.swiper-pagination2', clickable: true },
+        spaceBetween: 30,
+    });
+
+    // Затримка перемикання на документи
+    setTimeout(() => $('.block2.active').removeClass('active'), 1000);
+});
+</script>
+</body>
+</html>
